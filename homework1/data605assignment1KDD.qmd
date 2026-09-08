@@ -1,0 +1,171 @@
+---
+title: "Data 605 Week 1 assignment 1"
+author: "Keith DeNivo"
+format: typst
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+## **Instructions**
+
+Each homework assignment should be submitted as a **Python or R file**. All code, outputs, graphics, explanations, and interpretations must be included.
+
+**Supply Chain Analytics with Vectors, Matrices, and Systems of Equations**
+
+**Topics**
+
+- Vectors
+
+- Matrices
+
+- Systems of Linear Equations
+
+**Scenario**
+
+A retail company operates three warehouses that distribute products to three sales regions. Management wants to evaluate current inventory levels, shipping patterns, and determine whether existing inventory can satisfy customer demand.
+
+You have been provided the following datasets (files included as attachments; you need to access the assignment to download them):
+
+**inventory.csv**
+
+Warehouse,Region1,Region2,Region3
+
+A,1200,900,800
+
+B,1000,1100,700
+
+C,900,700,1000
+
+**demand.csv**
+
+Region,Demand
+
+Region1,2800
+
+Region2,2400
+
+Region3,2500
+
+**shipments.csv**
+
+Warehouse,Region1,Region2,Region3
+
+A,300,400,500
+
+B,400,350,250
+
+C,500,300,200
+
+**Tasks**
+
+**Part A: Inventory Analysis**
+
+Using vector operations:
+
+1.  Calculate total inventory available in each region.
+
+2.  Calculate inventory surplus or shortage relative to demand.
+
+3.  Identify which region is most at risk of stock shortages.
+
+4.  Interpret the business implications.
+
+**Part B: Shipment Matrix Analysis**
+
+Using matrix operations:
+
+1.  Create a shipment matrix from the data.
+
+2.  Compute row totals and column totals.
+
+3.  Determine which warehouse ships the most products.
+
+4.  Determine which region receives the most products.
+
+**Part C: Resource Allocation Model**
+
+After reviewing inventory levels and shipment activity, management wants to determine how many additional truckloads of inventory should be sent from each warehouse next week to meet projected demand.
+
+Let:
+
+x = number of truckloads shipped from Warehouse A\
+y = number of truckloads shipped from Warehouse B\
+z = number of truckloads shipped from Warehouse C
+
+Based on transportation capacity and regional replenishment requirements, management has developed the following system of equations:
+
+x+y+z=18
+
+2x+y=26
+
+y+2z=22
+
+These equations represent:
+
+Total truckloads available for shipment.\
+Capacity constraints at Warehouse A.\
+Combined delivery requirements for Warehouses B and C.
+
+Tasks\
+1. Express the System in Matrix Form
+
+Rewrite the system as:
+
+Ax=b
+
+Identify:
+
+The coefficient matrix A\
+The variable vector x\
+The constants vector b
+
+2\. Solve the System Computationally
+
+Using Python or R:
+
+Create the coefficient matrix.\
+Create the constants vector.\
+Solve for xxx, yyy, and zzz.
+
+Report the values obtained.
+
+3\. Verify the Solution
+
+Verify that the solution satisfies all three equations by:
+
+Substituting the values into each equation, or\
+Demonstrating computationally that:\
+Ax=b
+
+Include your output.
+
+4\. Business Interpretation
+
+Write a brief discussion (150–250 words) addressing:
+
+How many truckloads should each warehouse ship?\
+Which warehouse contributes the most inventory?\
+How does the mathematical solution help management allocate resources efficiently?\
+Why are systems of linear equations useful in supply chain planning and logistics?
+
+Support your explanation using results from Parts A and B whenever appropriate.
