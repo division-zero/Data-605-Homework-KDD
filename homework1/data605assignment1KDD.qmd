@@ -1,44 +1,47 @@
 ---
 title: "Data 605 Week 1 assignment 1"
 author: "Keith DeNivo"
-format: typst
+format: pdf
 editor: visual
 ---
 
-## Quarto
+```{r libraries}
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
+library(tidyverse)
+library(RCurl)
+library(MASS)
+library(lpSolve)
 ```
 
-You can add options to executable code like this
+```{r read_in_data}
 
-```{r}
-#| echo: false
-2 * 2
+#downloading Data
+demandurl <- "https://raw.githubusercontent.com/division-zero/Data-605-Homework-KDD/refs/heads/main/homework1/demand.csv"
+demandlink <- getURL(demandurl)
+#read in the raw file
+demand_df <- data.frame(read.csv(text = demandlink ))
+#put the csv into a dataframe
+
+head(demand_df)
+
+inventorylink <- getURL("https://raw.githubusercontent.com/division-zero/Data-605-Homework-KDD/refs/heads/main/homework1/inventory.csv")
+#read in the raw file
+inventory_df <- data.frame(read.csv(text = inventorylink ))
+#put the csv into a dataframe
+
+head(inventory_df)
+
+shipmentslink <- getURL("https://raw.githubusercontent.com/division-zero/Data-605-Homework-KDD/refs/heads/main/homework1/shipments.csv")
+#read in the raw file
+shipments_df <- data.frame(read.csv(text = shipmentslink ))
+#put the csv into a dataframe
+
+head(shipments_df)
+
+#head to view each dataframe
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
-
-## **Instructions**
-
-Each homework assignment should be submitted as a **Python or R file**. All code, outputs, graphics, explanations, and interpretations must be included.
-
-**Supply Chain Analytics with Vectors, Matrices, and Systems of Equations**
-
-**Topics**
-
-- Vectors
-
-- Matrices
-
-- Systems of Linear Equations
+## 
 
 **Scenario**
 
@@ -84,11 +87,47 @@ Using vector operations:
 
 1.  Calculate total inventory available in each region.
 
-2.  Calculate inventory surplus or shortage relative to demand.
+```{r}
+#sum the values in the columns in inventory data frame and display.
+region1inventory <- c(inventory_df[, 2])
+#display region 1's inventory values
+print.listof(region1inventory) 
+#summing region 1 inventory
+cat("region1 sum: ", sum(region1inventory),'\n') 
 
-3.  Identify which region is most at risk of stock shortages.
+#repeat for region 2 and 3.
+region2inventory <- c(inventory_df[, 3])
+print.listof(region2inventory)
+cat("region2 sum: ", sum(region2inventory),'\n')
 
-4.  Interpret the business implications.
+region3inventory <- c(inventory_df[, 4])
+print.listof(region3inventory)
+cat("region3 sum: ", sum(region3inventory),'\n')
+```
+
+1.  Calculate inventory surplus or shortage relative to demand.
+
+    ```{r}
+
+    #extract the values of the demands for the regions from demand data frame
+    regionsdemand <- c(demand_df[,2])
+    print('each regions demand')
+    print(regionsdemand)
+    #put the sum of the inventory of the regions into a vector
+    inventorysum <- c(sum(region1inventory), sum(region2inventory), sum(region3inventory))
+    print(inventorysum)
+    #calculate and display the difference between the inventory and the demand
+    inventoryminusdemand <- inventorysum - regionsdemand
+    cat("Surplus for each region: \n", "region 1: ", inventoryminusdemand[1],"\n", "region 2: ", inventoryminusdemand[2], "\n region 3: ", inventoryminusdemand[3] )
+    ```
+
+    Identify which region is most at risk of stock shortages.
+
+    Region 3 due to demand equaling inventory. region 1 and region 2 have 300 surplus each.
+
+    Interpret the business implications.
+
+    If demand fluctuates at all then region 3 will not be able to fulfill demand that is higher than the current demand. There will be missed sales in the region and possible customer dissatisfaction. It should be worth noting that having exactly what is needed when it is needed is the most efficient, however it is too risky.
 
 **Part B: Shipment Matrix Analysis**
 
@@ -96,11 +135,39 @@ Using matrix operations:
 
 1.  Create a shipment matrix from the data.
 
-2.  Compute row totals and column totals.
+```{r}
 
-3.  Determine which warehouse ships the most products.
+head(shipments_df)
 
-4.  Determine which region receives the most products.
+#connvert data frame to matrix
+shipments_matrix <- data.matrix(shipments_df)
+print(shipments_matrix)
+```
+
+1.  Compute row totals and column totals.
+
+    ```{r}
+    shipments_df
+
+    #calculating row total excluding first column because it is the warehouse label
+    rowtotal <- rowSums(shipments_matrix[,-1])
+
+    #displaying the row totals with the warehouse name 
+    cat(colnames(shipments_df)[1], '\n',shipments_df[1,1],' ',rowtotal[1],'\n',shipments_df[2,1], ' ', rowtotal[2], '\n',shipments_df[3,1], ' ', rowtotal[3], '\n')
+
+    #the column totals excluding the warehouse label from total
+    columntotal <- colSums(shipments_matrix[,-1])
+    cat('column totals: ', '\n')
+    print(columntotal)
+    ```
+
+    Determine which warehouse ships the most products.
+
+    Warehouse A ships the most products at 1200.
+
+    Determine which region receives the most products.
+
+    Assuming the shipment csv shows warehouses shipping to regions, then region 1 receives the most products at 1200 products.
 
 **Part C: Resource Allocation Model**
 
@@ -139,15 +206,85 @@ The coefficient matrix A\
 The variable vector x\
 The constants vector b
 
+```{r}
+
+#construct the matrxi
+truckloadmatrix <- matrix(c(1,1,1,18,
+         2,1,0,26,
+         0,1,2,22), nrow = 3, byrow = TRUE)
+print('augmented matrix')
+print(truckloadmatrix)
+#constraints vector
+print('constraints/values b')
+b <- c(truckloadmatrix[,4])
+print(b)
+#coefficent matrix
+print('coefficent matrix')
+A <- truckloadmatrix[,-4]
+print(A)
+
+
+
+
+```
+
+Coefficent matrix A = A
+
+variable vector x = x
+
+constrains vector b = b
+
+$$ Ax=b  \\ \\
+\begin{bmatrix} 1 & 1 & 1 \\ 2 & 1 & 0 \\ 0 & 1 & 2 \end{bmatrix}
+\begin{bmatrix} x \\ y \\ z \end{bmatrix} =
+\begin{bmatrix} 18 \\ 26 \\ 22 \end{bmatrix}$$
+
 2\. Solve the System Computationally
 
 Using Python or R:
 
 Create the coefficient matrix.\
 Create the constants vector.\
-Solve for xxx, yyy, and zzz.
+Solve for x, y, and z.
 
 Report the values obtained.
+
+```{r}
+
+#x <- solve(A,b)
+#print(x)
+#Error in solve.default(A, b) :
+#  Lapack routine dgesv: system is exactly singular: U[3,3] = 0
+
+
+#x <- qr.solve(A,b)
+#print(x)
+#Error in qr.solve(A, b) : singular matrix 'a' in solve
+
+det(A)
+print(det(A))
+```
+
+Since the determinant is zero that means the matrix is singular and non-invertible.
+
+For a system of linear equations that means the equations are not linearly independent, so an infinite number or no solutions could exist. "solve" in R can not find a solution.
+
+```{r}
+
+#to take a guess at a solution
+#From Mass Package
+#Calculates a Moore-Penrose generalized inverse or psuedoinverse of a matrix to approximate a solution.
+
+#x=A^-1*b
+print('A^-1')
+print(ginv(A))
+print('b')
+print(b)
+x <- ginv(A) %*% b
+print('solved x with moore penrose generalized inverse:')
+print(x)
+
+```
 
 3\. Verify the Solution
 
@@ -159,13 +296,109 @@ Ax=b
 
 Include your output.
 
+```{r}
+
+print("Ax=b")
+print("A")
+print(A)
+cat('\n','b:',b,'\n')
+bsolved <- A %*% c(x)
+print("approximated b")
+print(bsolved)
+print("original b")
+print(b)
+print("residuals")
+print(b-bsolved)
+```
+
+The values generated x= 8.33, y= 7.33, z = 6.33 do not satisfy the equations.
+
+They generate a constants vector 22, 24, 20 which gives residuals of -4, 2 , 2 for 18, 26, 22.
+
+```{r}
+print(" %error")
+print('equation 1:')
+print(abs(-4)/18*100)
+print('equation 2:')
+print(abs(2)/26*100)
+print('eqaution 3:')
+print(abs(2)/22*100)
+```
+
+we can not use this as a possible solution since it does not satisfy the physical "hard" constraints
+
+number truckloads available, which is impossible to go above
+
+x+y+z \<= 18
+
+warehouse A capacity which is impossible to go above
+
+2x+y \<= 26
+
+Delivery requirements:
+
+y+2z = 22
+
+now is there a solution that meets the above requirements?
+
+```{r}
+
+
+#using lpsolve to solve the above proposed equations
+
+# equation to minimize x + y + z total trucks
+minimize_eq <- c(1, 1, 1)
+
+#Matrix 
+coeff_mat <- A
+
+# =, <=, etc.
+signs <- c("<=", "<=", "=")
+
+# constraints
+print("b")
+print(b)
+
+# solving for the equations
+solution <- lp("min", minimize_eq, coeff_mat, signs, b, all.int = TRUE)
+
+
+print("solution")
+print(solution)
+cat("Shipped from warehouse A x:", solution$solution[1], '\n')
+cat("Shipped from warehouse B y:", solution$solution[2], '\n')
+cat("Shipped from warehouse C z:", solution$solution[3], '\n')
+
+
+new_b <- A%*%c(solution$solution[1],solution$solution[2],solution$solution[3])
+print('residuals')
+print(b-new_b)
+
+```
+
+Satisfies deliveries equation 1 residual 0, Does not use any warehouse A capacity equation 2 residual 26. uses 7 less truckloads than total.
+
 4\. Business Interpretation
+
+Support your explanation using results from Parts A and B whenever appropriate.
 
 Write a brief discussion (150–250 words) addressing:
 
-How many truckloads should each warehouse ship?\
-Which warehouse contributes the most inventory?\
-How does the mathematical solution help management allocate resources efficiently?\
+How many truckloads should each warehouse ship?
+
+To satisfy the deliveries Warehouse C can ship 11 truckloads. Warehouses A and B do not have to ship any. 11 trucks the the minimum number of truckloads shipped.
+
+\
+Which warehouse contributes the most inventory?
+
+Warehouse C contributes the most inventory since every truckload from warehouse C counts as 2 deliveries warehouse B truckload only counts as 1 delivery. so if you want to use the least amount of truckloads you should use shipments from warehouse C.
+
+\
+How does the mathematical solution help management allocate resources efficiently?
+
+Using this solution you do not need to use any warehouse A capacity needlessly. It uses the fewest number of truckloads to satisfy the delivery.
+
+\
 Why are systems of linear equations useful in supply chain planning and logistics?
 
-Support your explanation using results from Parts A and B whenever appropriate.
+Systems of linear equations are useful in supply chain planning and logistics because they allow you to optimize the resources you have in order to meet the physical constraints given such as number of raw materials, number of transportation vehicles, storage space, delivery demand etc. In the real world there may be more than one solution, but it usually best to find the minimum to reduce the resource consumption. If you can set up the equations you can find unique solutions that may satisfy the problem.
