@@ -1,0 +1,93 @@
+---
+title: "data605hw2kdd"
+format: pdf
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+**Social Network Influence Analysis**
+
+**Topics**
+
+- Eigenvalues
+
+- Eigenvectors
+
+**Scenario**
+
+A marketing company wants to identify key influencers in a social media network before launching a new product campaign.
+
+**network.csv**
+
+User,User1,User2,User3,User4,User5,User6
+
+User1,0,1,1,0,0,0
+
+User2,1,0,1,1,0,1
+
+User3,1,1,0,1,1,0
+
+User4,0,1,1,0,1,0
+
+User5,0,0,1,1,0,1
+
+User6,0,1,0,0,1,0
+
+Let 𝐴𝑖𝑗=1 if User 𝑖 and User 𝑗 are connected, and 𝐴𝑖𝑗=0 otherwise. The network is undirected, so \
+𝐴 should be symmetric. The diagonal entries are zero because users are not connected to themselves.
+
+Define the dominant eigenvalue as the real eigenvalue with the largest magnitude. For this nonnegative adjacency matrix, it is also the largest eigenvalue.
+
+**Tasks**
+
+**Part A: Network Representation**
+
+1.  Import the dataset.
+
+2.  Create a labeled network visualization that displays all users and their connections. Include node labels and ensure the graph is readable.
+
+**Part B: Eigen Analysis**
+
+1.  Compute eigenvalues.
+
+2.  Compute eigenvectors.
+
+3.  Identify the dominant eigenvalue.
+
+4.  Use the eigenvector associated with the dominant eigenvalue. The user corresponding to the largest absolute component of that eigenvector should be identified as the most influential user.
+
+**Note:** Eigenvectors are unique only up to a scalar multiple. Therefore, your eigenvector may differ in sign from another student's solution while still being mathematically correct.
+
+**Part C: Business Recommendation**
+
+Write a brief report (250–400 words) addressing:
+
+1.  Which users should be prioritized for the marketing campaign?
+
+2.  How does eigenvector centrality differ from simply counting connections?
+
+3.  Why are eigenvectors useful for identifying influential users?
+
+4.  What limitations exist when using network structure alone to guide marketing decisions?
+
+5.  What additional information would strengthen your recommendation?
