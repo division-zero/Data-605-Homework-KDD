@@ -1,0 +1,328 @@
+---
+title: "data605hw3kdd"
+format: pdf
+editor: visual
+---
+
+```{r}
+#| output: false
+
+#load libraries
+library(tidyverse)
+library(RCurl)
+library(psych)
+library(DescTools)
+```
+
+**Hospital Emergency Department Demand Modeling**
+
+**Topics**
+
+- Discrete Probability Distributions
+
+- Continuous Probability Distributions
+
+**Scenario**
+
+A hospital wants to improve staffing by understanding patient arrivals and treatment times.
+
+**arrivals.csv**
+
+Import the dataset.
+
+```{r}
+
+
+#downloading Data
+arrivalsurl <- "https://raw.githubusercontent.com/division-zero/Data-605-Homework-KDD/refs/heads/main/Homework3/arrivals.csv"
+arrivallink <- getURL(arrivalsurl)
+#read in the raw file
+arrival_df <- data.frame(read.csv(text = arrivallink ))
+#put the csv into a dataframe
+
+head(arrival_df)
+
+#downloading Data
+treatmenturl <- "https://raw.githubusercontent.com/division-zero/Data-605-Homework-KDD/refs/heads/main/Homework3/treatment_times.csv"
+treatmentlink <- getURL(treatmenturl)
+#read in the raw file
+treatment_df <- data.frame(read.csv(text = treatmentlink ))
+#put the csv into a dataframe
+
+head(treatment_df)
+```
+
+**Part A: Patient Arrivals**
+
+Compute descriptive statistics.
+
+Determine whether a Poisson distribution is appropriate.
+
+```{r}
+#descriptive statistics
+print('discriptive statistics')
+describe(arrival_df)
+summary(arrival_df)
+
+lambda <-  mean(arrival_df$Patients)
+
+variance <- var(arrival_df$Patients)
+print('variance')
+print(variance)
+print('mean')
+print(lambda)
+print('variance/lambda')
+print(variance/lambda)
+
+print('visualizing the data')
+
+#visualizing the raw data with mean
+ggplot(arrival_df, aes(x = Hour, y = Patients)) +
+  geom_col(fill = "blue") +
+  labs( title = "Number of Patients by Hour",
+        x = "Hour",
+        y = "Number of Patients"
+  ) + geom_hline( yintercept = mean(arrival_df$Patients),
+                  color = 'red',
+                  linetype = 'dashed'
+  )
+
+
+```
+
+The patients arriving per hour are independent and not simultaneous events. There is not a clear trend across the hours on the patients arriving. The mean and variance are not drastically different, variance is less than 100% difference from the mean. The mean and variance are not orders of magnitude or higher different from each other. There is no theoretical upper cap to the counts of patients. All these are indicators that a poisson distribution is appropriate
+
+Estimate the arrival rate parameter.
+
+```{r}
+
+
+
+print('arrival rate parameter')
+
+print(lambda)
+
+#visulaization of paitents with Poisson distribution
+
+#calculate probablilites for density
+limit_probabilities <- data.frame(
+  Patients = arrival_df$Patients,
+  probability = dpois(
+    arrival_df$Patients,
+    lambda = lambda))
+
+
+ggplot(limit_probabilities, aes(x = Patients, y = probability)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "Poisson Probabilities of Hourly Patient Counts",
+    x = "Number of Patients in One Hour",
+    y = "Probability"
+  ) +
+  geom_vline(xintercept = lambda,
+             color = 'red',
+             linetype = 'dashed')
+```
+
+Calculate the probability of more than 30 arrivals in an hour.
+
+```{r}
+
+#more than 30 arrivals in an hour
+p_more_than_30_arrivals <- ppois(
+  30,
+  lambda = lambda,
+  lower.tail = FALSE
+)
+
+print('Probability of more than 30 arrivals in an hour')
+print(p_more_than_30_arrivals)
+
+cat('approximately ', p_more_than_30_arrivals*100,'%')
+```
+
+**Part B: Treatment Times**
+
+1.  
+
+2.  
+
+<!-- -->
+
+1.  Visualize the distribution.
+
+```{r}
+
+#plot just to look at the raw data
+ggplot(treatment_df, aes(x = PatientID, y = TreatmentMinutes)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "Treatment Time vs Paitent ID ",
+    x = "Paitent ID",
+    y = "Treament Time (minutes)"
+  ) 
+
+#creating a histogram with bins of 10 minutes each
+ggplot(treatment_df, aes(x = TreatmentMinutes, )) +
+  geom_histogram( binwidth = 10, fill = "steelblue", color = "white") +
+
+  labs(title = "Distribution of Treament Minutes",
+       subtitle = 'for every 10 minutes',
+              x = "Treatment (Minutes)", 
+       y = "Count")
+
+describe(treatment_df)
+
+
+
+```
+
+- 
+
+- Estimate mean and standard deviation.
+
+```{r}
+
+#description of the treatment time
+treatment_describe <- describe(treatment_df)
+
+treatment_describe
+minute_describe <- describe(treatment_df$TreatmentMinutes)
+print('mean')
+print(minute_describe$mean)
+print('standard deviation')
+print(minute_describe$sd)
+
+
+```
+
+1.  Determine whether a Normal distribution is reasonable.
+
+    Based off of the skew and kurtosis of the data, the normal distribution is a reasonable description of the treatment minute's distribution.
+
+Skew (Asymmetry) value 0.13 is small abs(skew) \<0.5 which indicates the data is mostly symmetric
+
+Kurtosis(Peak Shape/Tailing) -1.32
+
+abs(Kurtosis)\< 2.0
+
+> 2.0 or greater which indicates extreme tailing or sharp peaks in the data
+
+This data can be modeled with a normal distribution, however the data does not fit a normal distribution perfectly.
+
+depending on the bin size one can make the data look or or less like a normal distribution.
+
+```{r}
+
+# plot histogram of the data
+ggplot(treatment_df, aes(x = TreatmentMinutes)) +
+  # using stat density to scale to show normal distribution curve overlayed on data
+  geom_histogram(aes(y = after_stat(density)), binwidth = 8, fill = "skyblue", color = "white", alpha = 0.7) +
+  
+  # overlaying a normal distribution curve
+  stat_function(fun = dnorm, args = list(mean = mean(treatment_df$TreatmentMinutes), sd = sd(treatment_df$TreatmentMinutes)), color = "red", linewidth = 1) +
+  
+  labs(title = "Treatment Minutes",
+       subtitle = 'for every 7 minutes with normal distribution curve',
+       x = "Minutes", 
+       y = "Density")
+
+#plot qq plot to show normal distribution fit
+ggplot(treatment_df, aes(sample = TreatmentMinutes)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+labs(title = "QQ plot treatment minutes", subtitle = "data deviates from norm at ends")
+
+```
+
+1.  Calculate the probability that treatment exceeds 45 minutes.
+
+```{r}
+#calculating mean standard deviation of treatment minutes
+minute_mean <- mean(treatment_df$TreatmentMinutes)
+minute_sd <- sd(treatment_df$TreatmentMinutes)
+p_more_than_45_minutes <- pnorm(
+  45,
+  mean = minute_mean, sd = minute_sd,
+  lower.tail = FALSE
+)
+print('probability of waiting more than 45 minutes')
+print(p_more_than_45_minutes)
+```
+
+**Part C: Simulation**
+
+1.  
+
+2.  
+
+3.  
+
+<!-- -->
+
+1.  Simulate one month of arrivals.
+
+I assumed the hospital is open 24 hours but they only recorded 20 hours of data.
+
+```{r}
+
+
+#simulating arrivals
+set.seed(42)
+
+n_simulations <- 30*24 #(30 days times 24 hours = 1 month)
+arrival_rate <-  lambda
+#generate arrivials each hour based on poisson distribution, do it for 1 month worth of time
+arrival_simulation <- rpois(
+  n = n_simulations,
+  lambda = lambda
+)
+#calculate mean
+empirical_mean <- mean(
+  arrival_simulation
+)
+
+
+
+
+
+```
+
+1.  Estimate expected daily demand.
+
+```{r}
+#calculating daily arrival statistics from simulation
+total_paitents <- sum(arrival_simulation)
+print('simulated paitents per hour')
+print(empirical_mean)
+print('paitents per hour based on hospital data')
+print(arrival_rate)
+print('number of paitents in 1 month')
+print(total_paitents)
+print('number of paitents per day')
+print(empirical_mean*24)
+
+
+#simulating number of minutes needed for each paitent
+minute_simulation <- rnorm(n = total_paitents, mean = minute_mean, sd = minute_sd)
+
+sim_min_mean <- mean(minute_simulation)
+#calculating treatment minutes statistics 
+cat("average 1 month simulated treatment time: ", sim_min_mean,'\n')
+print('standard deviation of simulated minutes per paitent')
+print(sd(minute_simulation))
+cat('average treatment time based on hospital data: ', mean(treatment_df$TreatmentMinutes),'\n')
+print('simulated number of treatment minutes per day')
+print(sim_min_mean*empirical_mean*24)
+
+```
+
+1.  Recommend staffing improvements.
+
+Having \~575 patients a day is a lot of patients. currently each patient needs \~36 minutes of treatment time. totaling is 20682.32 minutes per day. Increasing staff may help reduce the treatment time, and adequate staff is needed to care for at least 575 patients a day. However certain procedures require a certain amount of time, so throwing more staff at a problem does not help. On a side note public health initiatives may change what the general public may need to go to the hospital for and that can effect the number of patients and which treatments the hospital may have to provide. Currently the max treatment time in the data provided is 55 minutes, so at least a patient can be treated within an hour, once treatment starts. At least 24 patients need to be treated within an hour or 575 a day in order to prevent the hospital from being overrun with patients. So the staff at a minimum would have to be able to process that many patients. It would be useful to explore data on staff to determine if changing the number of staff would have a significant effect on treatment times, and the time it takes for a patient to start treatment.
+
+```{r}
+
+
+
+```

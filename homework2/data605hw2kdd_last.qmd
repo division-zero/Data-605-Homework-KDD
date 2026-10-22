@@ -1,0 +1,200 @@
+---
+title: "data605hw2kdd"
+format: pdf
+editor: visual
+---
+
+**Social Network Influence Analysis**
+
+**Topics**
+
+- Eigenvalues
+
+- Eigenvectors
+
+**Scenario**
+
+A marketing company wants to identify key influencers in a social media network before launching a new product campaign.
+
+**network.csv**
+
+User,User1,User2,User3,User4,User5,User6
+
+User1,0,1,1,0,0,0
+
+User2,1,0,1,1,0,1
+
+User3,1,1,0,1,1,0
+
+User4,0,1,1,0,1,0
+
+User5,0,0,1,1,0,1
+
+User6,0,1,0,0,1,0
+
+Let 𝐴𝑖𝑗=1 if User 𝑖 and User 𝑗 are connected, and 𝐴𝑖𝑗=0 otherwise. The network is undirected, so \
+𝐴 should be symmetric. The diagonal entries are zero because users are not connected to themselves.
+
+Define the dominant eigenvalue as the real eigenvalue with the largest magnitude. For this nonnegative adjacency matrix, it is also the largest eigenvalue.
+
+## Social Network Influence Analysis
+
+```{r}
+#| output: false
+
+#load libraries
+library(tidyverse)
+library(RCurl)
+library(MASS)
+library(lpSolve)
+library(igraph)
+library(networkD3)
+```
+
+**Part A: Network Representation**
+
+Import the dataset.
+
+```{r}
+
+#downloading Data
+networkurl <- "https://raw.githubusercontent.com/division-zero/Data-605-Homework-KDD/refs/heads/main/homework2/network.csv"
+networklink <- getURL(networkurl)
+#read in the raw file
+network_df <- data.frame(read.csv(text = networklink ))
+#put the csv into a dataframe
+
+head(network_df)
+```
+
+1.  Create a labeled network visualization that displays all users and their connections. Include node labels and ensure the graph is readable.
+
+```{r}
+
+#convert dataframe to matrix
+network_mat <- data.matrix(network_df)
+
+#remove the user label column
+network_mat1 <- network_mat[,-1]
+
+print(network_mat1)
+print('number of connections for each user:')
+print(colSums(network_mat1))
+
+#https://r-graph-gallery.com/network.html
+
+# make graph object
+network <- graph_from_adjacency_matrix(network_mat1)
+
+# plot it
+plot(network, main = "social network users")
+
+```
+
+User 2 and User 3 have the most connections, but which one has the most influence?
+
+## Adjacency matrix checks:
+
+```{r}
+
+
+
+print('n x n matrix?')
+print(dim(network_mat1))
+
+#matrix is not considered symmetric if row names do not match column names.  update row names to column names
+rownames(network_mat1) <- colnames(network_mat1)
+#check symmetry and diagonal of matrix
+print("is matrix symmetric?")
+print(isSymmetric(network_mat1))
+print('diagonal must be zeros')
+print(diag(network_mat1))
+
+
+```
+
+**Part B: Eigen Analysis**
+
+1.  Compute eigenvalues.
+
+2.  Compute eigenvectors.
+
+3.  Identify the dominant eigenvalue.
+
+```{r}
+
+eigen_A <- eigen(network_mat1)
+
+print(eigen_A$values)
+dominant_value <- max(abs(eigen_A$values))
+print('dominant value')
+print(dominant_value)
+print('which eigenvector has dominant value?')
+print(which.max(abs(eigen_A$values)))
+
+print(eigen_A$vectors)
+
+```
+
+1.  Use the eigenvector associated with the dominant eigenvalue. The user corresponding to the largest absolute component of that eigenvector should be identified as the most influential user.
+
+```{r}
+
+#find the column with highest eigenvalue using corresponding eigenvalues vector
+position <- which.max(abs(eigen_A$values))
+largest_eigenvalue_vector <- eigen_A$vectors[,position]
+abs_l_eigen_vector <- abs(largest_eigenvalue_vector)
+
+print('users')
+names(abs_l_eigen_vector) <- 1:6
+
+print('which user is the most influential? Ranked below')
+# Sort from largest value to smallest value
+print(sort(abs_l_eigen_vector, decreasing = TRUE))
+print('user 3 is most influential')
+
+
+```
+
+Verify that the adjacency matrix multiplied by the eigenvector is equal to the eigenvalue multiplied by the eigenvector.
+
+$$A*v = \lambda\ *v$$
+
+```{r}
+
+# verify Av≈λv
+#display the values
+print(network_mat1)
+print(eigen_A$values[position])
+print(largest_eigenvalue_vector)
+print("is Av≈λv ?" )
+all.equal(
+  as.vector(network_mat1 %*% largest_eigenvalue_vector),
+  as.vector(eigen_A$values[position] * largest_eigenvalue_vector)
+)
+
+```
+
+**Part C: Business Recommendation**
+
+Write a brief report (250–400 words) addressing:
+
+1.  Which users should be prioritized for the marketing campaign?
+
+    User 3 is considered to be the most influential based on centrality score. User 2 has the same number of connections as user 3 at 4 connections but was considered to be less influential based on centrality score. The 3rd most influential based was user 4 with 3 connections. User 3 should be top priority for the marketing campaign.
+
+2.  How does eigenvector centrality differ from simply counting connections?
+
+    While counting connections does contribute highly to influence it does not factor in the amount that those connections are connected to. For example if there is one person that is connected to 5 connections, but those connections were not connected to anyone else they would have less influence on people than a person with 5 connections and each of those connections have other connections. The centrality score identifies and takes into account how many connections each connection to a user has. It boosts their centrality score.
+
+3.  Why are eigenvectors useful for identifying influential users?
+
+    Eigenvectors are useful for identifying influential users by differentiating the users with high number of connections. They provide additional information about the user's connections and their connectivity. Eigenvectors can provide centrality scores that will provide information on the entire web of connections. Higher centrality scores will have connection webs with less dead ends.
+
+4.  What limitations exist when using network structure alone to guide marketing decisions?
+
+    This alone only provides information on the connections a user has and their web of connections. It is possible that someone knows a lot of people, but is not active they would still achieve a high connection and centrality score. The network structure alone does not provide any information on how people engage with the user or if they would follow that user's advice. It may provide information on which users have the largest web of connections, but those connections may not be relevant users to the marketing campaign. That web could be against certain products like high carbon footprint products.
+
+5.  What additional information would strengthen your recommendation?
+
+    Some information that would be helpful is to know what users in these network webs currently buy and to find if they would be willing to buy certain products. It may be useful to target large webs and get user feedback or look at previous user feedback from previous campaigns. It may be more advantageous to target smaller webs, that higher chance of buying the product. Information that would identify who the target audience is and if they are part of those network webs would help.
